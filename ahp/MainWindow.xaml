@@ -4,54 +4,51 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ahp"
-        xmlns:Custom="http://schemas.microsoft.com/winfx/2006/xaml/presentation/ribbon" x:Class="ahp.MainWindow"
+        xmlns:Custom="http://schemas.microsoft.com/winfx/2006/xaml/presentation/ribbon" 
+        xmlns:chartingToolkit="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=System.Windows.Controls.DataVisualization.Toolkit"
+        x:Class="ahp.MainWindow"
         mc:Ignorable="d"
-        Title="AHP EHan Engineering" Height="350" Width="525">
+        Title="AHP EHan Engineering" Height="463.2" Width="525">
     
     
     <Grid>
 
-        <Custom:Ribbon x:Name="ribbon" HorizontalAlignment="Left" VerticalAlignment="Top" Width="518" ShowQuickAccessToolBarOnTop="False" WindowIconVisibility="Hidden" Margin="0,-21,0,0">
+        <Custom:Ribbon x:Name="ribbon" HorizontalAlignment="Left" VerticalAlignment="Top" Width="518" ShowQuickAccessToolBarOnTop="False" WindowIconVisibility="Hidden" Margin="0,-21,0,0" Height="110">
             <Custom:Ribbon.ApplicationMenu>
                 <Custom:RibbonApplicationMenu Visibility="Collapsed"/>
             </Custom:Ribbon.ApplicationMenu>
             
             <Custom:RibbonTab Name="prjTab" Header="Project">
                 <Custom:RibbonGroup Header="Project">
-                    <Custom:RibbonButton LargeImageSource="pack://application:,,,/Resources/new.png" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"/>
-                    <Custom:RibbonButton LargeImageSource="pack://application:,,,/Resources/save.png"></Custom:RibbonButton>
-                    <Custom:RibbonButton LargeImageSource="pack://application:,,,/Resources/open1.ico"></Custom:RibbonButton>
+                    <Custom:RibbonButton Label="New" LargeImageSource="pack://application:,,,/Resources/new.png" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"/>
+                    <Custom:RibbonButton Label="Save" LargeImageSource="pack://application:,,,/Resources/save.png"></Custom:RibbonButton>
+                    <Custom:RibbonButton Label="Open" LargeImageSource="Resources/open.png"></Custom:RibbonButton>
                 </Custom:RibbonGroup>
             </Custom:RibbonTab>
             <Custom:RibbonTab Name="altTab" Header="Alternatives">
                 <Custom:RibbonGroup>
-                    <Custom:RibbonButton Label="Add"></Custom:RibbonButton>
-                </Custom:RibbonGroup>
-                <Custom:RibbonGroup>
-                    <Custom:RibbonButton Label="Delete"></Custom:RibbonButton>
+                    <Custom:RibbonButton Label="Add" LargeImageSource="Resources/add.png"></Custom:RibbonButton>
+                    <Custom:RibbonButton Label="Delete" LargeImageSource="Resources/delete2.png"></Custom:RibbonButton>
                 </Custom:RibbonGroup>
             </Custom:RibbonTab>
-            <Custom:RibbonTab Header="Criteria">
+            <Custom:RibbonTab Name="criTab" Header="Criteria">
                 <Custom:RibbonGroup>
-                    <Custom:RibbonButton Label="Add"></Custom:RibbonButton>
-                </Custom:RibbonGroup>
-                <Custom:RibbonGroup>
-                    <Custom:RibbonButton Label="Delete"></Custom:RibbonButton>
-                </Custom:RibbonGroup>
-                <Custom:RibbonGroup>
-                    <Custom:RibbonButton Label="Compare Matrix"></Custom:RibbonButton>
+                    <Custom:RibbonButton Label="Add" LargeImageSource="Resources/add.png"></Custom:RibbonButton>
+                    <Custom:RibbonButton Label="Delete" LargeImageSource="Resources/delete2.png"></Custom:RibbonButton>
+                    <Custom:RibbonButton Name="comMatrixButton" Label="Compare Matrix" LargeImageSource="Resources/matrix1.png" Click="comMatrixButton_Click"></Custom:RibbonButton>
                 </Custom:RibbonGroup>
                 <Custom:RibbonGroup>
                     <Label>CR</Label>
                     <Custom:RibbonTextBox></Custom:RibbonTextBox>
+                    <Image Source="Resources/glad.png"/>
                 </Custom:RibbonGroup>
             </Custom:RibbonTab>
-            <Custom:RibbonTab Header="Preference">
+            <Custom:RibbonTab Name="preTab" Header="Preference">
                 <Custom:RibbonGroup>
                     <Custom:RibbonButton Label=""></Custom:RibbonButton>
                 </Custom:RibbonGroup>
             </Custom:RibbonTab>
-            <Custom:RibbonTab Header="Result">
+            <Custom:RibbonTab Name="resTab" Header="Result">
                 <Custom:RibbonGroup>
                     <Custom:RibbonButton Label=""></Custom:RibbonButton>
                 </Custom:RibbonGroup>
@@ -59,16 +56,142 @@
         </Custom:Ribbon>
         
         <!-- main content, change according to tab selection-->
-        <Grid x:Name="MainGrid" Margin="0,117,0.4,0.4">
+        <Grid x:Name="MainGrid" Margin="0,89,0.4,0.2" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
             <Grid.Resources>
                 <BooleanToVisibilityConverter x:Key="boolToVis" />
             </Grid.Resources>
-
+            <!-- Project -->
             <Grid Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=prjTab}">
-                <Label>tab1</Label>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>                
+                </Grid.ColumnDefinitions>
+                <Label Margin="3">Project Name:</Label>
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="3"/>
+                <Label Grid.Row="1" Grid.Column="0" Margin="3">Goal:</Label>
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="3"/>
+                <Label Grid.Row="2" Grid.Column="0" Margin="3">Description:</Label>
+                <TextBox Grid.Row="2" Grid.Column="1" Grid.RowSpan="2"  Margin="3" TextWrapping="Wrap" AcceptsReturn="True" Height="200" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
             </Grid>
+            <!-- Alternative -->
             <Grid Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=altTab}">
-                <Label>tab2</Label>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <ListBox Grid.ColumnSpan="3">
+                    <ListBoxItem>Alternative1</ListBoxItem>
+                    <ListBoxItem>Alternative2</ListBoxItem>
+                    <ListBoxItem>Alternative3</ListBoxItem>
+                </ListBox>
+                <GroupBox Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Margin="3">Name:</Label>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3"/>
+                        <Label Grid.Row="1" Grid.Column="0" Margin="3">Description:</Label>
+                        <TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"  Margin="3" TextWrapping="Wrap" AcceptsReturn="True" Height="250" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+            <!-- Criteria -->
+            <Grid Name="criGrid" Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=criTab}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <ListBox Grid.ColumnSpan="3">
+                    <ListBoxItem>Criteria1</ListBoxItem>
+                    <ListBoxItem>Criteria2</ListBoxItem>
+                    <ListBoxItem>Criteria3</ListBoxItem>
+                </ListBox>
+                <GroupBox Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Margin="3">Name:</Label>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3"/>
+                        <Label Grid.Row="1" Grid.Column="0" Margin="3">Description:</Label>
+                        <TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"  Margin="3" TextWrapping="Wrap" AcceptsReturn="True" Height="250" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+            <Grid Name="mtxGrid" Visibility="Hidden"/>
+            <!-- Preference -->
+            <Grid Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=preTab}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <ListBox Grid.ColumnSpan="3">
+                    <ListBoxItem>Criteria1</ListBoxItem>
+                    <ListBoxItem>Criteria2</ListBoxItem>
+                    <ListBoxItem>Criteria3</ListBoxItem>
+                </ListBox>
+                <GroupBox Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Margin="3">Alternative1:</Label>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3"/>
+                        <Label Grid.Row="1" Grid.Column="0" Margin="3">Alternative1:</Label>
+                        <TextBox Grid.Row="1" Grid.Column="1" Margin="3"/>
+                        <Label Grid.Row="2" Grid.Column="0" Margin="3">Alternative1:</Label>
+                        <TextBox Grid.Row="2" Grid.Column="1" Margin="3"/>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+            <!-- Result -->
+            <Grid Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=resTab}"> 
+                <chartingToolkit:Chart  Name="BarChart1" Title="%" Width="450">
+                    <chartingToolkit:BarSeries  DependentValuePath="Value" IndependentValuePath="Key" ItemsSource="{Binding}" IsSelectionEnabled="True"/>
+                </chartingToolkit:Chart>
             </Grid>
         </Grid>
 
