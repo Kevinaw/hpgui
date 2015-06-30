@@ -13,17 +13,30 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+using System.IO;
+using System.Xml;
+using System.Xml.Linq;
+using System.Windows.Controls.Ribbon;
+
 namespace ahp
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : RibbonWindow
     {
+        string tmpFile;
         public MainWindow()
         {
             InitializeComponent();
             showChart();
+
+            // when software starts up, new project file is created (temporary file)
+            // also, xml structure is set up.
+            //tmpFile = CreateTmpFile();
+            //UpdateTmpFile(tmpFile);
+            //ReadTmpFile(tmpFile);
+            //DeleteTmpFile(tmpFile);
         }
 
         private void comMatrixButton_Click(object sender, RoutedEventArgs e)
@@ -205,5 +218,241 @@ namespace ahp
 
             BarChart1.DataContext = MyValue;
         }
+
+        private static string CreateTmpFile()
+        {
+            string fileName = string.Empty;
+
+            try
+            {
+                // Get the full name of the newly created Temporary file. 
+                // Note that the GetTempFileName() method actually creates
+                // a 0-byte file and returns the name of the created file.
+                fileName = System.IO.Path.GetTempFileName();
+
+                // Craete a FileInfo object to set the file's attributes
+                FileInfo fileInfo = new FileInfo(fileName);
+
+                // Set the Attribute property of this file to Temporary. 
+                // Although this is not completely necessary, the .NET Framework is able 
+                // to optimize the use of Temporary files by keeping them cached in memory.
+                fileInfo.Attributes = FileAttributes.Temporary;
+                //CreatXmlTree(fileName);
+
+                Console.WriteLine("TEMP file created at: " + fileName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unable to create TEMP file or set its attributes: " + ex.Message);
+            }
+
+            return fileName;
+        }
+
+        private static void UpdateTmpFile(string tmpFile)
+        {
+            try
+            {
+                // Write to the temp file.
+                StreamWriter streamWriter = File.AppendText(tmpFile);
+                streamWriter.WriteLine("Hello from www.daveoncsharp.com!");
+                streamWriter.Flush();
+                streamWriter.Close();
+
+                Console.WriteLine("TEMP file updated.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error writing to TEMP file: " + ex.Message);
+            }
+        }
+
+        private static void ReadTmpFile(string tmpFile)
+        {
+            try
+            {
+                // Read from the temp file.
+                StreamReader myReader = File.OpenText(tmpFile);
+                Console.WriteLine("TEMP file contents: " + myReader.ReadToEnd());
+                myReader.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error reading TEMP file: " + ex.Message);
+            }
+        }
+
+        private static void DeleteTmpFile(string tmpFile)
+        {
+            try
+            {
+                // Delete the temp file (if it exists)
+                if (File.Exists(tmpFile))
+                {
+                    File.Delete(tmpFile);
+                    Console.WriteLine("TEMP file deleted.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error deleteing TEMP file: " + ex.Message);
+            }
+        }
+
+        public void CreatXmlTree(string xmlPath)
+        {
+            XElement xElement = new XElement(
+                new XElement("Project",
+                    new XElement("Name"),
+                    new XElement("Goal"),
+                    new XElement("Description"),
+                    new XElement("Alternatives",
+                         new XElement("AlternativesItem",
+                            new XElement("Name", "Alternative1"),
+                            new XElement("Description")
+                        ),
+                        new XElement("AlternativesItem",
+                            new XElement("Name", "Alternative2"),
+                            new XElement("Description")
+                        ),
+                        new XElement("AlternativesItem", 
+                            new XElement("Name", "Alternative3"),
+                            new XElement("Description")
+                        )
+                    ),
+                    new XElement("Criteria",
+                        new XElement("CriteriaItem",
+                            new XElement("Name", "Criteria1"),
+                            new XElement("Description")
+                        ),
+                        new XElement("CriteriaItem",
+                            new XElement("Name", "Criteria2"),
+                            new XElement("Description")
+                        ),
+                        new XElement("CriteriaItem",
+                            new XElement("Name", "Criteria3"),
+                            new XElement("Description")
+                        )
+                    ),
+                    new XElement("Results")));
+ 
+             //需要指定编码格式，否则在读取时会抛：根级别上的数据无效。 第 1 行 位置 1异常
+             XmlWriterSettings settings = new XmlWriterSettings();
+             settings.Encoding = new UTF8Encoding(false);
+             settings.Indent = true;
+             XmlWriter xw = XmlWriter.Create(xmlPath, settings);
+             xElement.Save(xw);
+             //写入文件
+             xw.Flush();
+             xw.Close();
+        }
+    }
+
+    class XmlOperation
+        {
+
+            public void Create(string xmlPath)
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlPath);
+                var root = xmlDoc.DocumentElement;//取到根结点
+
+                XmlNode newNode = xmlDoc.CreateNode("element", "Name", "");
+                newNode.InnerText = "Zery";
+
+                //添加为根元素的第一层子结点
+                root.AppendChild(newNode);
+                xmlDoc.Save(xmlPath);
+            }
+            //属性
+            public void CreateAttribute(string xmlPath)
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlPath);
+                XmlElement node = (XmlElement)xmlDoc.SelectSingleNode("Collection/Book");
+                node.SetAttribute("Name", "C#");
+                xmlDoc.Save(xmlPath);
+            }
+
+            public void Delete(string xmlPath)
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlPath);
+                var root = xmlDoc.DocumentElement;//取到根结点
+
+                var element = xmlDoc.SelectSingleNode("Collection/Name");
+                root.RemoveChild(element);
+                xmlDoc.Save(xmlPath);
+            }
+
+            public void DeleteAttribute(string xmlPath)
+            {
+
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlPath);
+                XmlElement node = (XmlElement)xmlDoc.SelectSingleNode("Collection/Book");
+                //移除指定属性
+                node.RemoveAttribute("Name");
+                //移除当前节点所有属性，不包括默认属性
+                node.RemoveAllAttributes();
+
+                xmlDoc.Save(xmlPath);
+
+            }
+
+            public void Modify(string xmlPath)
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlPath);
+                var root = xmlDoc.DocumentElement;//取到根结点
+                XmlNodeList nodeList = xmlDoc.SelectNodes("/Collection/Book");
+                //xml不能直接更改结点名称，只能复制然后替换，再删除原来的结点
+                foreach (XmlNode node in nodeList)
+                {
+                    var xmlNode = (XmlElement)node;
+                    xmlNode.SetAttribute("ISBN", "Zery");
+                }
+                xmlDoc.Save(xmlPath);
+
+            }
+
+            public void ModifyAttribute(string xmlPath)
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlPath);
+                XmlElement element = (XmlElement)xmlDoc.SelectSingleNode("Collection/Book");
+                element.SetAttribute("Name", "Zhang");
+                xmlDoc.Save(xmlPath);
+
+            }
+
+            public void Select(string xmlPath)
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlPath);
+                //取根结点
+                var root = xmlDoc.DocumentElement;//取到根结点
+                                                  //取指定的单个结点
+                XmlNode singleNode = xmlDoc.SelectSingleNode("Collection/Book");
+
+                //取指定的结点的集合
+                XmlNodeList nodes = xmlDoc.SelectNodes("Collection/Book");
+
+                //取到所有的xml结点
+                XmlNodeList nodelist = xmlDoc.GetElementsByTagName("*");
+            }
+
+            public void SelectAttribute(string xmlPath)
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlPath);
+                XmlElement element = (XmlElement)xmlDoc.SelectSingleNode("Collection/Book");
+                string name = element.GetAttribute("Name");
+
+            }
+        }
+
+    struct AlternativesItem
+    {
     }
 }
