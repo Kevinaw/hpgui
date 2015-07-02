@@ -17,6 +17,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 using System.Windows.Controls.Ribbon;
+using System.Windows.Threading;
 
 namespace ahp
 {
@@ -25,7 +26,19 @@ namespace ahp
     /// </summary>
     public partial class MainWindow : RibbonWindow
     {
-        string tmpFile;
+        //string tmpFile;
+        private Boolean isEditingAl = false;
+        private int editingItemIndexAl;
+        private Boolean isEditingCr = false;
+        private int editingItemIndexCr;
+
+        List<string> listAlt = new List<string>();
+        List<string> listCr = new List<string>();
+
+        private double[,] mtx;
+        private static string[] strValues = {"1/9", "1/8", "1/7", "1/6", "1/5", "1/4", "1/3", "1/2", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+        private static double[] dblValues = { 0.1111111, 0.125, 0.1428571, 0.1666666, 0.2, 0.25, 0.3333333, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
         public MainWindow()
         {
             InitializeComponent();
@@ -41,171 +54,231 @@ namespace ahp
 
         private void comMatrixButton_Click(object sender, RoutedEventArgs e)
         {
-            //MessageBox.Show("button clicked");
             if (comMatrixButton.Background != comMatrixButton.MouseOverBackground)
             {
+                int i, j;
                 comMatrixButton.Background = comMatrixButton.MouseOverBackground;
                 this.criGrid.Visibility = Visibility.Hidden;
-                this.mtxGrid.Visibility = Visibility.Visible;
+                this.mtxBdr.Visibility = Visibility.Visible;
+                //this.mtxGrid.Visibility = Visibility.Visible;
                 this.mtxGrid.Children.Clear();
                 this.mtxGrid.RowDefinitions.Clear();
                 this.mtxGrid.ColumnDefinitions.Clear();
 
-                //Grid mtxGrid = new Grid();
-                RowDefinition row1 = new RowDefinition(); 
-                RowDefinition row2 = new RowDefinition();
-                RowDefinition row3 = new RowDefinition();
-                RowDefinition row4 = new RowDefinition();
-                ColumnDefinition col1 = new ColumnDefinition();
-                ColumnDefinition col2 = new ColumnDefinition();
-                ColumnDefinition col3 = new ColumnDefinition();
-                ColumnDefinition col4 = new ColumnDefinition();
+                if (listCr.Count == 0)
+                    return;
 
-                //row1.Height = new GridLength(3, GridUnitType.Star);
-                //row2.Height = new GridLength(4, GridUnitType.Star);
-                //row3.Height = new GridLength(3, GridUnitType.Star);
-                //col.Width = new GridLength(10, GridUnitType.Star);
+                if(mtx != null)
+                {
+                    // unregister all the element names
+                    for (i = 0; i < Math.Sqrt(mtx.Length) - 1; i++)
+                        for (j = i + 1; j < Math.Sqrt(mtx.Length); j++)
+                        {
+                            UnregisterName("txtNum" + i.ToString() + j.ToString());
+                            UnregisterName("txtBlk" + j.ToString() + i.ToString());
+                        }
+                }
 
-                this.mtxGrid.RowDefinitions.Add(row1);
-                this.mtxGrid.RowDefinitions.Add(row2);
-                this.mtxGrid.RowDefinitions.Add(row3);
-                this.mtxGrid.RowDefinitions.Add(row4);
-                this.mtxGrid.ColumnDefinitions.Add(col1);
-                this.mtxGrid.ColumnDefinitions.Add(col2);
-                this.mtxGrid.ColumnDefinitions.Add(col3);
-                this.mtxGrid.ColumnDefinitions.Add(col4);
+                if (mtx == null)
+                {
+                    mtx = new double[listCr.Count, listCr.Count];
+                    for (i = 0; i < listCr.Count; i++)
+                        for (j = 0; j < listCr.Count; j++)
+                            mtx[i, j] = 1;
+                }
+                // delete one or more criteria
+                else if (mtx.Length > listCr.Count * listCr.Count)
+                {
+                    double[,] tmp = mtx;
+                    mtx = new double[listCr.Count, listCr.Count];
 
-                //this.ribbon.Visibility = Visibility.Hidden;
-                
+                    for (i = 0; i < listCr.Count; i++)
+                        for (j = 0; j < listCr.Count; j++)
+                            mtx[i, j] = tmp[i, j];
+                }
+                // add one or more criteria
+                else if (mtx.Length < listCr.Count * listCr.Count)
+                {
+                    double[,] tmp = mtx;
+                    mtx = new double[listCr.Count, listCr.Count];
+                    for (i = 0; i < listCr.Count; i++)
+                        for (j = 0; j < listCr.Count; j++)
+                            mtx[i, j] = 1;
+
+                    for (i = 0; i < Math.Sqrt(tmp.Length); i++)
+                        for (j = 0; j < Math.Sqrt(tmp.Length); j++)
+                            mtx[i, j] = tmp[i, j];
+                }
+                else // no change to criteria
+                    ;
 
 
-                TextBlock text01 = new TextBlock();
-                text01.Text = "Criteria1";
-                //text01.VerticalAlignment = VerticalAlignment.Center;
-                //text01.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBlock text02 = new TextBlock();
-                text02.Text = "Criteria2";
-                //text02.VerticalAlignment = VerticalAlignment.Center;
-                //text02.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBlock text03 = new TextBlock();
-                text03.Text = "Criteria3";
-               // text03.VerticalAlignment = VerticalAlignment.Center;
-                //text03.HorizontalAlignment = HorizontalAlignment.Center;
+                double gridWidth = 90;
+                double gridHeight = 60;
+                (mtxGrid.Parent as Border).HorizontalAlignment = HorizontalAlignment.Center;
+                (mtxGrid.Parent as Border).VerticalAlignment = VerticalAlignment.Center;
+                double x = MainGrid.ActualWidth;
+                double y = MainGrid.ActualHeight;
+                if (x >= (listCr.Count + 1) * gridWidth)
+                {
+                    for (i = 0; i < listCr.Count + 1; i++)
+                    {
+                        RowDefinition row = new RowDefinition();
+                        row.Height = new GridLength(gridHeight);
+                        ColumnDefinition col = new ColumnDefinition();
+                        col.Width = new GridLength(gridWidth);
 
-                TextBlock text10 = new TextBlock();
-                text10.Text = "Criteria1";
-                //text10.VerticalAlignment = VerticalAlignment.Center;
-                //text10.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBlock text20 = new TextBlock();
-                text20.Text = "Criteria2";
-                //text20.VerticalAlignment = VerticalAlignment.Center;
-                //text20.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBlock text30 = new TextBlock();
-                text30.Text = "Criteria3";
-                //text30.VerticalAlignment = VerticalAlignment.Center;
-                //text30.HorizontalAlignment = HorizontalAlignment.Center;
+                        mtxGrid.RowDefinitions.Add(row);
+                        mtxGrid.ColumnDefinitions.Add(col);
+                    }
+                    (mtxGrid.Parent as Border).Width = (listCr.Count + 1) * gridWidth;
+                    (mtxGrid.Parent as Border).Height = (listCr.Count + 1) * gridHeight;
 
-                TextBlock text11 = new TextBlock();
-                text11.Text = "1";
-               // text11.VerticalAlignment = VerticalAlignment.Center;
-               // text11.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBlock text22 = new TextBlock();
-                text22.Text = "1";
-               // text22.VerticalAlignment = VerticalAlignment.Center;
-               // text22.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBlock text33 = new TextBlock();
-                text33.Text = "1";
-               // text33.VerticalAlignment = VerticalAlignment.Center;
-               // text33.HorizontalAlignment = HorizontalAlignment.Center;
+                }
+                    
+                else
+                {
+                    gridWidth = (x - 10)/ (listCr.Count + 1);
+                    gridHeight = gridWidth*2/3;
+                    for (i = 0; i < listCr.Count + 1; i++)
+                    {
+                        RowDefinition row = new RowDefinition();
+                        row.Height = new GridLength(gridHeight);
+                        ColumnDefinition col = new ColumnDefinition();
+                        col.Width = new GridLength(gridWidth);
 
-                TextBlock text21 = new TextBlock();
-                text21.Text = "1/2";
-               // text21.VerticalAlignment = VerticalAlignment.Center;
-               // text21.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBlock text31 = new TextBlock();
-                text31.Text = "1/3";
-                //text31.VerticalAlignment = VerticalAlignment.Center;
-               // text31.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBlock text32 = new TextBlock();
-                text32.Text = "5";
-                //text32.VerticalAlignment = VerticalAlignment.Center;
-               // text32.HorizontalAlignment = HorizontalAlignment.Center;
+                        mtxGrid.RowDefinitions.Add(row);
+                        mtxGrid.ColumnDefinitions.Add(col);
+                    }
+                    (mtxGrid.Parent as Border).Width = x - 10;
+                    (mtxGrid.Parent as Border).Height = (x - 10)*2/3;
 
-                TextBox text12 = new TextBox();
-                //text12.VerticalAlignment = VerticalAlignment.Center;
-                //text12.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBox text13 = new TextBox();
-                //text13.VerticalAlignment = VerticalAlignment.Center;
-                //text13.HorizontalAlignment = HorizontalAlignment.Center;
-                TextBox text23 = new TextBox();
-                //text23.VerticalAlignment = VerticalAlignment.Center;
-                //text23.HorizontalAlignment = HorizontalAlignment.Center;
+                }
 
-                this.mtxGrid.Children.Add(text01);
-                Grid.SetRow(text01, 0);
-                Grid.SetColumn(text01, 1);
+                // redraw matrix
+                for (i = 0; i < listCr.Count + 1; i++)
+                {
+                    TextBlock txt;
 
-                this.mtxGrid.Children.Add(text02);
-                Grid.SetRow(text02, 0);
-                Grid.SetColumn(text02, 2);
+                    if (i != listCr.Count)
+                    {
+                        txt = new TextBlock();
+                        txt.Text = listCr.ElementAt(i);
+                        mtxGrid.Children.Add(txt);
+                        Grid.SetRow(txt, 0);
+                        Grid.SetColumn(txt, i + 1);
+                        txt.HorizontalAlignment = HorizontalAlignment.Center;
+                        txt.VerticalAlignment = VerticalAlignment.Center;
 
-                this.mtxGrid.Children.Add(text03);
-                Grid.SetRow(text03, 0);
-                Grid.SetColumn(text03, 3);
+                        txt = new TextBlock();
+                        txt.Text = listCr.ElementAt(i);
+                        mtxGrid.Children.Add(txt);
+                        Grid.SetRow(txt, i + 1);
+                        Grid.SetColumn(txt, 0);
+                        txt.HorizontalAlignment = HorizontalAlignment.Center;
+                        txt.VerticalAlignment = VerticalAlignment.Center;
+                    }
+                    
 
-                this.mtxGrid.Children.Add(text10);
-                Grid.SetRow(text10, 1);
-                Grid.SetColumn(text10, 0);
+                    if(i > 0)
+                    {
+                        txt = new TextBlock();
+                        txt.Text = "1";
+                        mtxGrid.Children.Add(txt);
+                        Grid.SetRow(txt, i);
+                        Grid.SetColumn(txt, i);
+                        txt.HorizontalAlignment = HorizontalAlignment.Center;
+                        txt.VerticalAlignment = VerticalAlignment.Center;
+                    }
 
-                this.mtxGrid.Children.Add(text20);
-                Grid.SetRow(text20, 2);
-                Grid.SetColumn(text20, 0);
 
-                this.mtxGrid.Children.Add(text30);
-                Grid.SetRow(text30, 3);
-                Grid.SetColumn(text30, 0);
+                    // starting from first line;
+                    if (i > 0 && i < listCr.Count)
+                    {
+                        for(j = i + 1; j < listCr.Count + 1; j++)
+                        {
+                            StackPanel sp = new StackPanel();
+                            sp.Orientation = Orientation.Horizontal;
 
-                this.mtxGrid.Children.Add(text11);
-                Grid.SetRow(text11, 1);
-                Grid.SetColumn(text11, 1);
+                            TextBox tb = new TextBox();
+                            int idx = Array.FindIndex(dblValues, z => z == mtx[i - 1, j - 1]);
+                            tb.Text = strValues[idx];
+                            //tb.Margin = new Thickness(5,5,0,5);
+                            tb.Width = 3*gridWidth/5;
+                            tb.Name = "txtNum" + (i - 1).ToString() + (j - 1).ToString();
+                            RegisterName(tb.Name, tb);
+                            tb.VerticalContentAlignment = VerticalAlignment.Center;
 
-                this.mtxGrid.Children.Add(text22);
-                Grid.SetRow(text22, 2);
-                Grid.SetColumn(text22, 2);
+                            Button btnUp = new Button();
+                            btnUp.Content = "+";
+                            //btnUp.Margin = new Thickness(0, 10, 0, 0);
+                            //btnUp.Width = 20;
+                            btnUp.Name = "cmdUp" + (i - 1).ToString() + (j - 1).ToString();
+                            btnUp.Click += new RoutedEventHandler(cmdUp_Click);
+                            //RegisterName(btnUp.Name, btnUp);
 
-                this.mtxGrid.Children.Add(text33);
-                Grid.SetRow(text33, 3);
-                Grid.SetColumn(text33, 3);
+                            Button btnDn = new Button();
+                            btnDn.Content = "-";
+                            //btnDn.Margin = new Thickness(0, 0, 0, 10);
+                            //btnDn.Width = 20;
+                            btnDn.Name = "cmdDn" + (i - 1).ToString() + (j - 1).ToString();
+                            btnDn.Click += new RoutedEventHandler(cmdDn_Click);
+                            //RegisterName(btnDn.Name, btnUp);
 
-                this.mtxGrid.Children.Add(text21);
-                Grid.SetRow(text21, 2);
-                Grid.SetColumn(text21, 1);
+                            StackPanel sp1 = new StackPanel();
+                            sp1.Orientation = Orientation.Vertical;
+                            sp1.Children.Add(btnUp);
+                            sp1.Children.Add(btnDn);
 
-                this.mtxGrid.Children.Add(text31);
-                Grid.SetRow(text31, 3);
-                Grid.SetColumn(text31, 1);
+                            sp.Children.Add(tb);
+                            sp.Children.Add(sp1);
 
-                this.mtxGrid.Children.Add(text32);
-                Grid.SetRow(text32, 3);
-                Grid.SetColumn(text32, 2);
+                            mtxGrid.Children.Add(sp);
+                            Grid.SetRow(sp, i);
+                            Grid.SetColumn(sp, j);
+                            sp.HorizontalAlignment = HorizontalAlignment.Center;
+                            sp.VerticalAlignment = VerticalAlignment.Center;
 
-                this.mtxGrid.Children.Add(text12);
-                Grid.SetRow(text12, 1);
-                Grid.SetColumn(text12, 2);
-
-                this.mtxGrid.Children.Add(text13);
-                Grid.SetRow(text13, 1);
-                Grid.SetColumn(text13, 3);
-
-                this.mtxGrid.Children.Add(text23);
-                Grid.SetRow(text23, 2);
-                Grid.SetColumn(text23, 3);
+                            txt = new TextBlock();
+                            idx = Array.FindIndex(dblValues, z => z == mtx[j - 1, i - 1]);
+                            txt.Text = strValues[idx];
+                            txt.Name = "txtBlk" + (j - 1).ToString() + (i - 1).ToString();
+                            RegisterName(txt.Name, txt);
+                            mtxGrid.Children.Add(txt);
+                            Grid.SetRow(txt, j);
+                            Grid.SetColumn(txt, i);
+                            txt.HorizontalAlignment = HorizontalAlignment.Center;
+                            txt.VerticalAlignment = VerticalAlignment.Center;
+                        }
+                    }
+                }           
             }
             else
             {
                 comMatrixButton.Background = Brushes.Transparent;
                 this.criGrid.Visibility = Visibility.Visible;
-                this.mtxGrid.Visibility = Visibility.Hidden;
+                this.mtxBdr.Visibility = Visibility.Hidden;
+            }
+        }
+
+        private void evalButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (mtx == null)
+            {
+                MessageBox.Show("criterias compare matrix has not been set!");
+                return;
+            }                
+            StructEvalResult res = ahp_eval(mtx);
+            txbCR.Text = String.Format("{0:0.000000}", res.CR);
+            if (res.CR < 0.1)
+            {
+                imgCR.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/glad.png"));
+                txbCR.Foreground = Brushes.Green;
+            }
+            else
+            {
+                imgCR.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/sad.png"));
+                txbCR.Foreground = Brushes.Red;
             }
         }
 
@@ -346,6 +419,580 @@ namespace ahp
              xw.Flush();
              xw.Close();
         }
+
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            addItemBoxAl_LostFocus();
+            addItemBoxCr_LostFocus();
+
+
+        }
+
+        private void addBtnAl_Click(object sender, RoutedEventArgs e)
+        {
+            TextBox newTxtBx = new TextBox();
+            newTxtBx.Width = contentLbxAl.ActualWidth - 10;
+            newTxtBx.Name = "addItemBoxAl";
+
+            // if the last item is textbox, don't show the box            
+            if (contentLbxAl.Items.Count != 0)
+            {
+                int index;
+                object lastItem;
+                lastItem = contentLbxAl.Items.GetItemAt(contentLbxAl.Items.Count - 1);// as ListBoxItem;
+
+                if (lastItem.GetType().ToString() != "System.Windows.Controls.TextBox")
+                {
+                    index = contentLbxAl.Items.Add(newTxtBx);
+                    this.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                                (Action)(() => { Keyboard.Focus(newTxtBx); }));
+                }
+            }
+            else
+                contentLbxAl.Items.Add(newTxtBx);
+        }
+
+        private void addItemBoxAl_LostFocus(/*object sender, RoutedEventArgs e*/)
+        {
+            if (contentLbxAl.Items.Count != 0)
+            {
+                TextBox lastItem;
+                lastItem = contentLbxAl.Items.GetItemAt(contentLbxAl.Items.Count - 1) as TextBox;
+
+                if (lastItem != null && lastItem.Text != "")
+                {
+                    if (listAlt.Exists(x=>x==lastItem.Text))
+                    {
+                        MessageBox.Show("duplicate alternative name!");
+                        return;
+                    }
+                    listAlt.Add(lastItem.Text);
+                        
+
+                    // delete the textbox
+                    contentLbxAl.Items.RemoveAt(contentLbxAl.Items.Count - 1);
+
+                    // add grid with delete button
+                    ListBoxItem newItem = new ListBoxItem();
+
+                    Grid newGrid = new Grid();
+                    ColumnDefinition col1 = new ColumnDefinition();
+                    ColumnDefinition col2 = new ColumnDefinition();
+                    col1.Width = new GridLength(contentLbxAl.ActualWidth * 5 / 8);
+                    col1.Width = new GridLength(contentLbxAl.ActualWidth * 3 / 8);
+                    newGrid.ColumnDefinitions.Add(col1);
+                    newGrid.ColumnDefinitions.Add(col2);
+
+                    TextBlock newText = new TextBlock();
+                    newText.Text = lastItem.Text;
+                    //newText.AddHandler(MouseDoubleClickEvent, new RoutedEventHandler(ListItem_DoubleClick));
+                    newText.MouseDown += new MouseButtonEventHandler(ListItemAl_DoubleClick);
+
+                    Button newBtn = new Button();
+                    newBtn.Name = "deleteBtnAl" + contentLbxAl.Items.Count.ToString();
+                    newBtn.Width = 22;
+                    newBtn.Height = 22;
+                    newBtn.Cursor = Cursors.Hand;
+                    newBtn.ToolTip = "delete alternative";
+                    newBtn.Click += new RoutedEventHandler(deleteBtnAl_OnClick);
+
+                    ImageBrush newB = new ImageBrush();
+                    newB.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Resources/delete1.png"));
+                    newBtn.Background = newB;
+
+                    newGrid.Children.Add(newText);
+                    newGrid.Children.Add(newBtn);
+
+                    Grid.SetColumn(newBtn, 1);
+
+                    newItem.Content = newGrid;
+
+                    contentLbxAl.Items.Add(newItem);
+                    RegisterName(newBtn.Name, newBtn);
+                }
+                else if (lastItem != null && lastItem.Text == "")
+                    contentLbxAl.Items.RemoveAt(contentLbxAl.Items.Count - 1);
+            }
+
+            if (isEditingAl == true)
+            {
+
+                ListBoxItem lbi = contentLbxAl.Items.GetItemAt(editingItemIndexAl) as ListBoxItem;
+                TextBox txt = (lbi.Content as Grid).Children[1] as TextBox;
+
+                if (listAlt.Exists(x => x == txt.Text))
+                {
+                    MessageBox.Show("duplicate alternative name!");
+                    return;
+                }
+                //listAlt.Remove(txt.Text);
+                listAlt.Add(txt.Text);
+
+                TextBlock txb = new TextBlock();
+                txb.Text = txt.Text;
+
+                (lbi.Content as Grid).Children.Remove(txt);
+                (lbi.Content as Grid).Children.Add(txb);
+
+                isEditingAl = false;
+            }
+        }   
+
+        private void deleteBtnAl_OnClick(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            if (btn != null)
+            {
+                int i;
+                int idx;
+                Button btn1;
+
+                idx = Convert.ToInt16(btn.Name.Substring(11));
+
+                ListBoxItem lbi = contentLbxAl.Items.GetItemAt(idx) as ListBoxItem;
+                TextBlock txt = (lbi.Content as Grid).Children[0] as TextBlock;
+                listAlt.Remove(txt.Text);
+                // delete this item according the index
+                contentLbxAl.Items.RemoveAt(idx);
+                UnregisterName(btn.Name);
+
+                if (idx != contentLbxAl.Items.Count)
+                {
+                    for (i = idx + 1; i < contentLbxAl.Items.Count + 1; i++)
+                    {
+                        btn1 = FindName("deleteBtnAl" + Convert.ToString(i)) as Button;
+                        UnregisterName(btn1.Name);
+                        btn1.Name = "deleteBtnAl" + (i - 1).ToString();
+                        RegisterName(btn1.Name, btn1);
+                    }
+                }
+
+            }
+        }
+
+        private void ListItemAl_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            // double click, trigger this editing event
+            if (e.ClickCount != 2)
+                return;
+
+            TextBlock txb = sender as TextBlock;
+            if (txb == null)
+                return;
+
+            TextBox txb1 = new TextBox();
+            txb1.Text = txb.Text;
+
+            listAlt.Remove(txb.Text);
+
+            Grid grd = txb.Parent as Grid;
+            grd.Children.Remove(txb);
+            grd.Children.Add(txb1);
+
+            isEditingAl = true;
+            ListBoxItem lbi = grd.Parent as ListBoxItem;
+            editingItemIndexAl = contentLbxAl.Items.IndexOf(lbi);
+
+            this.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                                (Action)(() => { Keyboard.Focus(txb1); }));
+
+        }
+
+        private void addBtnCr_Click(object sender, RoutedEventArgs e)
+        {
+            TextBox newTxtBx = new TextBox();
+            newTxtBx.Width = contentLbxCr.ActualWidth - 10;
+            newTxtBx.Name = "addItemBoxCr";
+
+            // if the last item is textbox, don't show the box            
+            if (contentLbxCr.Items.Count != 0)
+            {
+                int index;
+                object lastItem;
+                lastItem = contentLbxCr.Items.GetItemAt(contentLbxCr.Items.Count - 1);// as ListBoxItem;
+
+                if (lastItem.GetType().ToString() != "System.Windows.Controls.TextBox")
+                {
+                    index = contentLbxCr.Items.Add(newTxtBx);
+                    this.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                                (Action)(() => { Keyboard.Focus(newTxtBx); }));
+                }
+            }
+            else
+                contentLbxCr.Items.Add(newTxtBx);
+        }
+
+        private void addItemBoxCr_LostFocus(/*object sender, RoutedEventArgs e*/)
+        {
+            if (contentLbxCr.Items.Count != 0)
+            {
+                TextBox lastItem;
+                lastItem = contentLbxCr.Items.GetItemAt(contentLbxCr.Items.Count - 1) as TextBox;
+
+                if (lastItem != null && lastItem.Text != "")
+                {
+                    if (listCr.Exists(x => x == lastItem.Text))
+                    {
+                        MessageBox.Show("duplicate criteria name!");
+                        return;
+                    }
+                    listCr.Add(lastItem.Text);
+
+
+                    // delete the textbox
+                    contentLbxCr.Items.RemoveAt(contentLbxCr.Items.Count - 1);
+
+                    // add grid with delete button
+                    ListBoxItem newItem = new ListBoxItem();
+
+                    Grid newGrid = new Grid();
+                    ColumnDefinition col1 = new ColumnDefinition();
+                    ColumnDefinition col2 = new ColumnDefinition();
+                    col1.Width = new GridLength(contentLbxCr.ActualWidth * 5 / 8);
+                    col1.Width = new GridLength(contentLbxCr.ActualWidth * 3 / 8);
+                    newGrid.ColumnDefinitions.Add(col1);
+                    newGrid.ColumnDefinitions.Add(col2);
+
+                    TextBlock newText = new TextBlock();
+                    newText.Text = lastItem.Text;
+                    //newText.AddHandler(MouseDoubleClickEvent, new RoutedEventHandler(ListItem_DoubleClick));
+                    newText.MouseDown += new MouseButtonEventHandler(ListItemCr_DoubleClick);
+
+                    Button newBtn = new Button();
+                    newBtn.Name = "deleteBtnCr" + contentLbxCr.Items.Count.ToString();
+                    newBtn.Width = 22;
+                    newBtn.Height = 22;
+                    newBtn.Cursor = Cursors.Hand;
+                    newBtn.ToolTip = "delete criteria";
+                    newBtn.Click += new RoutedEventHandler(deleteBtnCr_OnClick);
+
+                    ImageBrush newB = new ImageBrush();
+                    newB.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Resources/delete1.png"));
+                    newBtn.Background = newB;
+
+                    newGrid.Children.Add(newText);
+                    newGrid.Children.Add(newBtn);
+
+                    Grid.SetColumn(newBtn, 1);
+
+                    newItem.Content = newGrid;
+
+                    contentLbxCr.Items.Add(newItem);
+                    RegisterName(newBtn.Name, newBtn);
+                }
+                else if (lastItem != null && lastItem.Text == "")
+                    contentLbxCr.Items.RemoveAt(contentLbxCr.Items.Count - 1);
+            }
+
+            if (isEditingCr == true)
+            {
+
+                ListBoxItem lbi = contentLbxCr.Items.GetItemAt(editingItemIndexCr) as ListBoxItem;
+                TextBox txt = (lbi.Content as Grid).Children[1] as TextBox;
+
+                if (listCr.Exists(x => x == txt.Text))
+                {
+                    MessageBox.Show("duplicate criteria name!");
+                    return;
+                }
+                //listAlt.Remove(txt.Text);
+                listCr.Add(txt.Text);
+
+                TextBlock txb = new TextBlock();
+                txb.Text = txt.Text;
+
+                (lbi.Content as Grid).Children.Remove(txt);
+                (lbi.Content as Grid).Children.Add(txb);
+
+                isEditingCr = false;
+            }
+        }
+
+        private void deleteBtnCr_OnClick(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            if (btn != null)
+            {
+                int i;
+                int idx;
+                Button btn1;
+
+                idx = Convert.ToInt16(btn.Name.Substring(11));
+
+                ListBoxItem lbi = contentLbxCr.Items.GetItemAt(idx) as ListBoxItem;
+                TextBlock txt = (lbi.Content as Grid).Children[0] as TextBlock;
+                listCr.Remove(txt.Text);
+                // delete this item according the index
+                contentLbxCr.Items.RemoveAt(idx);
+                UnregisterName(btn.Name);
+
+                if (idx != contentLbxCr.Items.Count)
+                {
+                    for (i = idx + 1; i < contentLbxCr.Items.Count + 1; i++)
+                    {
+                        btn1 = FindName("deleteBtnCr" + Convert.ToString(i)) as Button;
+                        UnregisterName(btn1.Name);
+                        btn1.Name = "deleteBtnCr" + (i - 1).ToString();
+                        RegisterName(btn1.Name, btn1);
+                    }
+                }
+
+            }
+        }
+
+        private void ListItemCr_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            // double click, trigger this editing event
+            if (e.ClickCount != 2)
+                return;
+
+            TextBlock txb = sender as TextBlock;
+            if (txb == null)
+                return;
+
+            TextBox txb1 = new TextBox();
+            txb1.Text = txb.Text;
+
+            listCr.Remove(txb.Text);
+
+            Grid grd = txb.Parent as Grid;
+            grd.Children.Remove(txb);
+            grd.Children.Add(txb1);
+
+            isEditingCr = true;
+            ListBoxItem lbi = grd.Parent as ListBoxItem;
+            editingItemIndexCr = contentLbxCr.Items.IndexOf(lbi);
+
+            this.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                                (Action)(() => { Keyboard.Focus(txb1); }));
+
+        }
+
+        private void cmdUp_Click(object sender, RoutedEventArgs e)
+        {
+            Button btnUp = sender as Button;
+
+            if (btnUp == null)
+                return;
+
+            string strN = btnUp.Name;
+            int intR, intC;
+            intR = Convert.ToInt16(strN.Substring(5, 1));
+            intC = Convert.ToInt16(strN.Substring(6, 1));
+
+            double dbl = mtx[intR, intC];
+            int idx = Array.FindIndex(dblValues, x => x == dbl);
+
+            if(idx == -1)
+            { MessageBox.Show("not found!"); return; }
+
+            if (idx == dblValues.Length - 1)
+                return;
+            else
+                idx += 1;
+
+            mtx[intR, intC] = dblValues[idx];
+            mtx[intC, intR] = dblValues[dblValues.Length - 1 - idx];
+
+            (FindName("txtNum" + intR.ToString() + intC.ToString()) as TextBox).Text = strValues[idx];
+            (FindName("txtBlk" + intC.ToString() + intR.ToString()) as TextBlock).Text = strValues[strValues.Length - 1 - idx];
+        }
+
+        private void cmdDn_Click(object sender, RoutedEventArgs e)
+        {
+            Button btnDn = sender as Button;
+
+            if (btnDn == null)
+                return;
+
+            string strN = btnDn.Name;
+            int intR, intC;
+            intR = Convert.ToInt16(strN.Substring(5, 1));
+            intC = Convert.ToInt16(strN.Substring(6, 1));
+
+            double dbl = mtx[intR, intC];
+            int idx = Array.FindIndex(dblValues, x => x == dbl);
+
+            if (idx == -1)
+            { MessageBox.Show("not found!"); return; }
+
+            if (idx == 0)
+                return;
+            else
+                idx -= 1;
+
+            mtx[intR, intC] = dblValues[idx];
+            mtx[intC, intR] = dblValues[dblValues.Length - 1 - idx];
+
+            (FindName("txtNum" + intR.ToString() + intC.ToString()) as TextBox).Text = strValues[idx];
+            (FindName("txtBlk" + intC.ToString() + intR.ToString()) as TextBlock).Text = strValues[strValues.Length - 1 - idx];
+
+        }
+
+        // calculate weights and CR
+        private StructEvalResult ahp_eval(double[,] matrix)
+        {
+            int n = (int) Math.Sqrt(matrix.Length);
+            int row = n;
+            int column = n;
+            double[] mul_column = new double[row];
+            double[] rot_column = new double[row];
+            double[] w = new double[row];
+            double[] aw = new double[row];
+            double[] aw_w = new double[row];
+            double CI;
+            double CR;
+            double sum = 0;
+            double average;
+            double[] RI = { 0.0, 0.0, 0.0, 0.58, 0.9, 1.12, 1.24, 1.32, 1.41, 1.45, 1.49 };
+
+            for (int i = 0; i < row; i++)
+            {
+                mul_column[i] = 1;
+                for (int j = 0; j < column; j++)
+                    mul_column[i] *= matrix[i, j];
+                rot_column[i] = Math.Pow(mul_column[i], 1.0 / n);
+                sum += rot_column[i];
+            }
+
+            // get normalized weight
+            for (int i = 0; i < row; i++)
+            {
+                w[i] = rot_column[i] / sum;
+            }
+
+            sum = 0;
+            // get aw and aww
+            for (int i = 0; i < row; i++)
+            {
+                aw[i] = 0;
+                for (int j = 0; j < column; j++)
+                    aw[i] += matrix[i, j] * w[j];
+
+                aw_w[i] = aw[i] / w[i];
+                sum += aw_w[i];
+            }
+            average = sum / row;
+
+            CI = (average - n) / (n - 1);
+            CR = CI / RI[n];
+
+            StructEvalResult result;
+            result.w = w;
+            result.CR = CR;
+            //double[] result = new double[n + 1];
+            //w.CopyTo(result, 0);
+            //result[n] = CR;
+            return result;
+        }
+
+        //计算节点的特征向量
+        private double[] normalize(double[][] matrix)
+        {
+            int row = matrix.Length;
+            int column = matrix[0].Length;
+            double[] Sum_column = new double[column];
+            double[] w = new double[row];
+            string normalizeType = "和法";
+
+            if (normalizeType == "和法")
+            {
+                for (int i = 0; i < column; i++)
+                {
+                    Sum_column[i] = 0;
+                    for (int j = 0; j < row; j++)
+                    {
+                        Sum_column[i] += matrix[j][i];
+                    }
+                }
+
+                //进行归一化,计算特征向量W
+
+                for (int i = 0; i < row; i++)
+                {
+                    w[i] = 0;
+                    for (int j = 0; j < column; j++)
+                    {
+                        w[i] += matrix[i][j] / Sum_column[j];
+                    }
+                    w[i] /= row;
+                }
+            }
+
+            if (normalizeType == "根法")
+            {
+                for (int i = 0; i < column; i++)
+                {
+                    Sum_column[i] = 0;
+                    for (int j = 0; j < row; j++)
+                    {
+                        Sum_column[i] += matrix[j][i];
+                    }
+                }
+
+                //进行归一化,计算特征向量W
+                double sum = 0;
+                for (int i = 0; i < row; i++)
+                {
+                    w[i] = 1;
+                    for (int j = 0; j < column; j++)
+                    {
+                        w[i] *= matrix[i][j] / Sum_column[j];
+                    }
+
+                    w[i] = Math.Pow(w[i], 1.0 / row);
+                    sum += w[i];
+                }
+
+                for (int i = 0; i < row; i++)
+                {
+                    w[i] /= sum;
+                }
+            }
+
+            if (normalizeType == "幂法")
+            {
+                double[] w0 = new double[row];
+                for (int i = 0; i < row; i++)
+                {
+                    w0[i] = 1.0 / row;
+                }
+
+                //一般向量W（k+1）
+                double[] w1 = new double[row];
+                //W（k+1）的归一化向量                
+                double sum = 1.0;
+                double d = 1.0;
+                double delt = 0.00001;
+                while (d > delt)
+                {
+                    d = 0.0;
+                    sum = 0;
+
+                    //获取向量
+                    for (int j = 0; j < row; j++)
+                    {
+                        w1[j] = 0;
+                        for (int k = 0; k < row; k++)
+                        {
+                            w1[j] += matrix[j][k] * w0[k];
+                        }
+                        sum += w1[j];
+                    }
+
+                    //向量归一化 
+                    for (int k = 0; k < row; k++)
+                    {
+                        w[k] = w1[k] / sum;
+                        d = Math.Max(Math.Abs(w[k] - w0[k]), d);//最大差值
+                        w0[k] = w[k];//用于下次迭代使用 
+                    }
+                }
+            }
+            return w;
+        }
+
+
     }
 
     class XmlOperation
@@ -452,7 +1099,9 @@ namespace ahp
             }
         }
 
-    struct AlternativesItem
+    struct StructEvalResult
     {
+        public double[] w;
+        public double CR;
     }
 }

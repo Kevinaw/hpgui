@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:ahp"
       xmlns:chartingToolkit="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=System.Windows.Controls.DataVisualization.Toolkit" x:Class="ahp.Page1"
+      xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="300"
       Title="Page1">
@@ -34,7 +35,9 @@
             <TextBlock Grid.Row="2" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"><Run Text="1"/></TextBlock>
             <TextBlock Grid.Row="3" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center"><Run Text="1"/></TextBlock>
 
-            <TextBox Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Text="1"/>
+            
+            <!--xctk:SingleUpDown >
+            </xctk:SingleUpDown-->
             <TextBox Grid.Row="1" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center" Text="2"/>
             <TextBox Grid.Row="2" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center" Text="3"/>
 
@@ -50,6 +53,11 @@
             </chartingToolkit:Chart.DataContext>
             <chartingToolkit:ColumnSeries DependentValuePath="X" IndependentValuePath="Y" ItemsSource="{Binding}"/>
         </chartingToolkit:Chart>
+        <ComboBox x:Name="comboBox" HorizontalAlignment="Left" Margin="-272,117,0,0" VerticalAlignment="Top" Width="120">
+            <ComboBox.BindingGroup>
+                <BindingGroup NotifyOnValidationError="True"/>
+            </ComboBox.BindingGroup>
+        </ComboBox>
 
     </Grid>
 </Page>

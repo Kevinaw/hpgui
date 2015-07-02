@@ -24,3 +24,4 @@ C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\system.windows.controls.da
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\WPFToolkit.dll
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\system.windows.controls.datavisualization.toolkit.pdb
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\WPFToolkit.pdb
+C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\Xceed.Wpf.Toolkit.dll

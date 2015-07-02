@@ -10,7 +10,7 @@
         xmlns:chartingToolkit="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=System.Windows.Controls.DataVisualization.Toolkit"
         x:Class="ahp.MainWindow"
         mc:Ignorable="d"
-        Title="AHP EHan Engineering" Height="510" Width="525">
+        Title="AHP EHan Engineering" Height="510" Width="525" MouseDown="Window_MouseDown">
     
         <!--Window.Resources>
             <ResourceDictionary>
@@ -66,9 +66,12 @@
                     <RibbonButton Name="comMatrixButton" Label="Compare Matrix" LargeImageSource="Resources/matrix1.png" Click="comMatrixButton_Click"></RibbonButton>
                 </RibbonGroup>
                 <RibbonGroup>
-                    <Label>CR</Label>
-                    <RibbonTextBox></RibbonTextBox>
-                    <Image Source="Resources/glad.png"/>
+                    <RibbonButton Name="evalButton" Label="evaluator" LargeImageSource="Resources/eval.png" Click="evalButton_Click"></RibbonButton>
+                    <StackPanel Orientation="Horizontal" >
+                        <Label HorizontalAlignment="Center" VerticalAlignment="Center">CR</Label>
+                        <RibbonTextBox Name="txbCR" HorizontalAlignment="Center" VerticalAlignment="Center"></RibbonTextBox>
+                        <Image Name="imgCR" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20"/>
+                    </StackPanel>
                 </RibbonGroup>
             </RibbonTab>
             <RibbonTab Name="preTab" Header="Preference">
@@ -109,75 +112,46 @@
             </Grid>
             <!-- Alternative -->
             <Grid Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=altTab}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <ListBox Grid.ColumnSpan="3">
-                    <ListBoxItem>Alternative1</ListBoxItem>
-                    <ListBoxItem>Alternative2</ListBoxItem>
-                    <ListBoxItem>Alternative3</ListBoxItem>
-                </ListBox>
-                <GroupBox Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="5">
+                <GroupBox Header="Alternatives" Margin="2">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Margin="3">Name:</Label>
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3"/>
-                        <Label Grid.Row="1" Grid.Column="0" Margin="3">Description:</Label>
-                        <TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"  Margin="3" TextWrapping="Wrap" AcceptsReturn="True" Height="250" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>                    
+                        <Button x:Name="addBtnAl" Content="" Margin="3" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="22" Cursor="Hand" Height="22" ToolTip="add new alternative" Click="addBtnAl_Click">
+                            <Button.Background>
+                                <ImageBrush ImageSource="Resources/add.png"/>
+                            </Button.Background>
+                        </Button>
+                        <ListBox Name="contentLbxAl"  Grid.Row="1" Margin="3">
+                            <!--ListBoxItem>Alternative1</>
+                            <ListBoxItem>Alternative2</ListBoxItem>
+                            <ListBoxItem>Alternative3</ListBoxItem-->
+                        </ListBox>
                     </Grid>
                 </GroupBox>
             </Grid>
             <!-- Criteria -->
             <Grid Name="criGrid" Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=criTab}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <ListBox Grid.ColumnSpan="3">
-                    <ListBoxItem>Criteria1</ListBoxItem>
-                    <ListBoxItem>Criteria2</ListBoxItem>
-                    <ListBoxItem>Criteria3</ListBoxItem>
-                </ListBox>
-                <GroupBox Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="5">
+                <GroupBox Header="Criteria" Margin="2">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Margin="3">Name:</Label>
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin="3"/>
-                        <Label Grid.Row="1" Grid.Column="0" Margin="3">Description:</Label>
-                        <TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"  Margin="3" TextWrapping="Wrap" AcceptsReturn="True" Height="250" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                        <Button x:Name="addBtnCr" Content="" Margin="3" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="22" Cursor="Hand" Height="22" ToolTip="add new Criteria" Click="addBtnCr_Click">
+                            <Button.Background>
+                                <ImageBrush ImageSource="Resources/add.png"/>
+                            </Button.Background>
+                        </Button>
+                        <ListBox Name="contentLbxCr"  Grid.Row="1" Margin="3">
+                        </ListBox>
                     </Grid>
                 </GroupBox>
             </Grid>
-            <Grid Name="mtxGrid" Visibility="Hidden"/>
+            <Border Name="mtxBdr" BorderThickness ="2" BorderBrush="Black" Visibility="Hidden">
+                <Grid Name="mtxGrid" ShowGridLines="True"/>
+            </Border>
             <!-- Preference -->
             <Grid Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=preTab}">
                 <Grid.ColumnDefinitions>
