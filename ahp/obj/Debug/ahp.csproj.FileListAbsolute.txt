@@ -18,10 +18,12 @@ C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\ahp.csproj.GenerateResourc
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\ahp.exe
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\ahp.pdb
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\ahp.csprojResolveAssemblyReference.cache
-C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\Page1.g.cs
-C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\Page1.baml
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\system.windows.controls.datavisualization.toolkit.dll
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\WPFToolkit.dll
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\system.windows.controls.datavisualization.toolkit.pdb
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\WPFToolkit.pdb
 C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\bin\Debug\Xceed.Wpf.Toolkit.dll
+C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\MainWindow_2.g.cs
+C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\MainWindow_2.baml
+C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\Page1.g.cs
+C:\Users\Huiquan\Desktop\csProjects\ahp\ahp\obj\Debug\Page1.baml

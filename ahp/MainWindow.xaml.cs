@@ -58,7 +58,7 @@ namespace ahp
             {
                 int i, j;
                 comMatrixButton.Background = comMatrixButton.MouseOverBackground;
-                this.criGrid.Visibility = Visibility.Hidden;
+                this.criGpBx.Visibility = Visibility.Hidden;
                 this.mtxBdr.Visibility = Visibility.Visible;
                 //this.mtxGrid.Visibility = Visibility.Visible;
                 this.mtxGrid.Children.Clear();
@@ -256,7 +256,7 @@ namespace ahp
             else
             {
                 comMatrixButton.Background = Brushes.Transparent;
-                this.criGrid.Visibility = Visibility.Visible;
+                this.criGpBx.Visibility = Visibility.Visible;
                 this.mtxBdr.Visibility = Visibility.Hidden;
             }
         }

@@ -133,7 +133,7 @@
             </Grid>
             <!-- Criteria -->
             <Grid Name="criGrid" Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=criTab}">
-                <GroupBox Header="Criteria" Margin="2">
+                <GroupBox Name="criGpBx" Header="Criteria" Margin="2">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -148,10 +148,11 @@
                         </ListBox>
                     </Grid>
                 </GroupBox>
+                <Border Name="mtxBdr" BorderThickness ="2" BorderBrush="Black" Visibility="Hidden">
+                    <Grid Name="mtxGrid" ShowGridLines="True"/>
+                </Border>
             </Grid>
-            <Border Name="mtxBdr" BorderThickness ="2" BorderBrush="Black" Visibility="Hidden">
-                <Grid Name="mtxGrid" ShowGridLines="True"/>
-            </Border>
+            
             <!-- Preference -->
             <Grid Visibility="{Binding IsSelected, Converter={StaticResource boolToVis}, ElementName=preTab}">
                 <Grid.ColumnDefinitions>
